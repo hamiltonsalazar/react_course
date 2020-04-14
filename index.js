@@ -1,28 +1,68 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { render } from "react-dom";
 
-const Button = ()=>{
-  const [count, setCount] = useState(0);
+const Form = ({ showed })=>{
+  let [title, setTitle] = useState("");
+  let [body, setBody] = useState("");
+
+  const firstInput = useRef();
 
   useEffect(()=>{
-    console.log("Me ejecuté");
-    return ()=>{
-      console.log("Adiós");
+    // Actualizar el Dom
+    if(showed){
+      console.log(firstInput);
+      firstInput.current.focus();
     }
-  }, [])
-  return <button onClick={()=> setCount(count+1)}>Click {count}</button>
+  })
+
+  const sendForm = (ev) =>{ 
+    ev.preventDefault()
+    fetch('https://jsonplaceholder.typicode.com/posts', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: title,
+        body: body,
+        userId: 1
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      }
+    })
+  .then(response => response.json())
+  .then(json => {
+    setTitle("");
+    setBody("");
+    console.log(json)})
+
+  }
+
+  return(
+    <form onSubmit={(ev)=> sendForm(ev)}>
+      <div>
+        <label htmlFor="title">Título</label>
+        <input type="text" value={title} id="title" onChange={ (ev)=> setTitle(ev.target.value)} ref={firstInput}/>
+      </div>
+      <div>
+        <label htmlFor="body">Publicación</label>
+        <textarea value={body} id="body" onChange={ (ev)=> setBody(ev.target.value)}></textarea>  
+      </div>
+      <input type="submit" value="Enviar" /> 
+    </form>
+  )
+}
+
+const Accordion = ()=>{
+  const [show, setShow] = useState(false);
+  return(
+    <div>
+    <button onClick={()=>setShow(true)}>Mostrar formulario</button>
+    {show && <Form showed={show}/>}
+    </div>
+  )
 }
 
 const App = () => {
-  const [showButton, setShowButton] = useState(true);
-  return (
-    <div>
-      <button onClick={ ()=>setShowButton(false) }>Eliminar botón</button>
-      <div>
-        {showButton && <Button />}
-      </div>
-    </div>
-  )
+ return <div> <Accordion /> </div>
 }
 
 render(<App />, document.getElementById("react-app"));
